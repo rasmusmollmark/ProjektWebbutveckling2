@@ -4,9 +4,9 @@ $lösenord = $_POST['password'];
 
 
 if(checkLogin($namn,$lösenord)){
-    echo "Inlogg lyckades!";
     session_start();
-    echo session_status();
+    header("Location: ./mainpage.php");
+    exit();
 }
 else{
     echo "Inlogg misslyckades!";
