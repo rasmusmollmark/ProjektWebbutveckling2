@@ -15,7 +15,8 @@ $stmt -> bindParam (':password', $lösenord, SQLITE3_TEXT);
 if ($stmt -> execute()) {
    
     $db -> close () ;
-    echo "Inlogg lyckades!";
+    header("Location: ./mainpage.php");
+    exit();
     return true;
     }
 else {
