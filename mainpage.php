@@ -7,9 +7,12 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 	<script>
-
+function createDeck(){
+$.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(data){
+				callPHP(data);
+			});
+        }
 		
-		window.onload = callPHP;
         function btn_click(){
 			$.get("https://deckofcardsapi.com/api/deck/new/draw/?count=1", function(data){
 				make_result(data);
@@ -31,6 +34,20 @@
 			console.log(input);
 			console.log(input.data)
 		}
+
+		function callPHP(deckID) {
+			let deckid = deckID.deck_id;
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "handleDeck.php?deckID="+deckid, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    // Handle the response from the PHP script
+                    var response = xhr.responseText;
+                    console.log(response);
+                }
+            };
+            xhr.send();
+        }
 	</script>
 </head>
 <body>
@@ -42,19 +59,8 @@
     </a>
 
 	<script>
-		function callPHP() {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "handleDeck.php", true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    // Handle the response from the PHP script
-                    var response = xhr.responseText;
-                    console.log(response);
-                }
-            };
-            xhr.send();
-        }
-		window.onload = callPHP;
+		
+		window.onload = createDeck();
 	</script>
 </body>
 </html>
