@@ -8,6 +8,19 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 	<script>
 
+		function callPHP() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "handleDeck.php", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    // Handle the response from the PHP script
+                    var response = xhr.responseText;
+                    console.log(response);
+                }
+            };
+            xhr.send();
+        }
+		window.onload = callPHP;
         function btn_click(){
 			$.get("https://deckofcardsapi.com/api/deck/new/draw/?count=1", function(data){
 				make_result(data);
