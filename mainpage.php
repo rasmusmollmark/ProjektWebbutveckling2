@@ -7,9 +7,9 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 	<script>
-function createDeck(){
-$.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(data){
-				callPHP(data);
+		function getDeck(){
+			$.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(data){
+				return callPHP(data);
 			});
         }
 		
@@ -36,18 +36,25 @@ $.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(
 		}
 
 		function callPHP(deckID) {
-			let deckid = deckID.deck_id;
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "handleDeck.php?deckID="+deckid, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    // Handle the response from the PHP script
-                    var response = xhr.responseText;
-                    console.log(response);
-                }
-            };
-            xhr.send();
-        }
+    // Construct the URL with parameters
+    var url = "handleDeck.php?deckID="+deckid;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Error:", data.error);
+            } else if (data) {
+                console.log("Deck ID:", data.deckID);
+                return data.deckID;
+            } else {
+                console.log("No deckID found.");
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+        });
+}
 	</script>
 </head>
 <body>
@@ -57,10 +64,5 @@ $.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(
     <a href="./displaycomments.php">
         <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
     </a>
-
-	<script>
-		
-		window.onload = createDeck();
-	</script>
 </body>
 </html>
