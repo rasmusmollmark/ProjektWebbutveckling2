@@ -3,7 +3,7 @@ $namn = $_POST['username'];
 $lösenord = $_POST['password'];
 
 
-if(loginCorrect($namn,$lösenord)){
+if(loginCorrect($namn,$lösenord) && !empty($namn)){
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
     header("Location: ./index.php");
