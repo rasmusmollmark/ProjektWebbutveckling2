@@ -5,7 +5,7 @@ $result = getDeckID($deckID);
 header('Content-Type: text/plain');
 echo $result;
 function getDeckID($deckID){
-    if($_SERVER["REQUEST_METHOD"] === "GET")
+    if($_SERVER["REQUEST_METHOD"] === "GET"){
     $db = new SQLite3 ("./db/database.db");
 
         $stmt = $db->prepare('SELECT deckID FROM Deck WHERE deckID = :deckID');
@@ -28,7 +28,7 @@ function getDeckID($deckID){
 
         // Close the database connection
         $db->close();
-}
+    }
 else{
     $db = new SQLite3 ("./db/database.db");
     $sql = " INSERT INTO 'Deck' ('deckID') VALUES (:deckID)" ;
@@ -47,25 +47,6 @@ else{
         return null;
     }
 }
+ }
 
-catch{
-    $db = new SQLite3 ("./db/database.db");
-    $sql = " INSERT INTO 'Deck' ('deckID') VALUES (:deckID)" ;
-    $stmt = $db -> prepare ( $sql ); 
-    $stmt -> bindParam (':deckID', $deckID, SQLITE3_TEXT);
-    
-    
-    if ($stmt -> execute()) {
-       
-        $db -> close () ;
-        return getDeckID($deckID);
-        
-        }
-    else {
-        $db -> close ();
-        echo "Nedladdning misslyckades!";
-        return null;
-    }
-}
-}
 ?>
