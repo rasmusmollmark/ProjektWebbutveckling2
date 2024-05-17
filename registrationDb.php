@@ -16,7 +16,7 @@ if ($stmt -> execute()) {
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
     $db -> close () ;
-    header("Location: ./mainpage.php");
+    header("Location: ./index.php");
     exit();
     return true;
     }

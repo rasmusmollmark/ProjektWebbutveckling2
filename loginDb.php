@@ -6,7 +6,7 @@ $lösenord = $_POST['password'];
 if(loginCorrect($namn,$lösenord)){
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
-    header("Location: ./mainpage.php");
+    header("Location: ./index.php");
     exit();
 }
 else{
