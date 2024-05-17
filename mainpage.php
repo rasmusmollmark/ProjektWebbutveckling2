@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <?php
-    session_start(); 
-    echo $_SESSION['USERID'];
-    ?>
+    <?php session_start(); 
+    if(!isset($_SESSION['uu'])){
+    header("Location: ./login.php");
+    exit();
+    }?>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hemsida</title>
@@ -62,11 +64,36 @@
 	</script>
 </head>
 <body>
-<div class="center-flex" id="container">
-	</div>
+
+<?php if(isset($_SESSION['uu'])):?>
+        <div class="center-flex" id="container">
+	<?php 
+
+    ?>
 	<button id="click_me" onclick="btn_click()">Click me!</button>
     <a href="./displaycomments.php">
         <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
     </a>
+    </div>
+        <?php endif?>
+       <?php if(!isset($_SESSION['uu'])):?>
+        
+        <section>
+    <h2>DU ÄR INTE INLOGGAD</h2>
+    <button>Gå tillbaka</button>
+   </section>
+        <?php endif?>
+
+   
+
+<!--
+<div class="center-flex" id="container">
+	
+	<button id="click_me" onclick="btn_click()">Click me!</button>
+    <a href="./displaycomments.php">
+        <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
+    </a>
+    </div>
+-->
 </body>
 </html>
