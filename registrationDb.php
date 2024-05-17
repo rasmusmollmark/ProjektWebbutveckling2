@@ -13,9 +13,10 @@ $stmt -> bindParam (':password', $lösenord, SQLITE3_TEXT);
 
 
 if ($stmt -> execute()) {
-   
+    session_start();
+    $_SESSION['USERID'] = getUserID($namn,$lösenord);
     $db -> close () ;
-    header("Location: ./mainpage.php");
+    header("Location: ./index.php");
     exit();
     return true;
     }
@@ -24,6 +25,18 @@ else {
     echo "Inlogg misslyckades!";
     return false;
 }
+}
+
+function getUserID($namn,$lösenord){
+    $db = new SQLite3 ("./db/database.db");
+$result = $db -> query('SELECT userID, username, password FROM User');
+while($person = $result -> fetchArray()){
+    if(strcmp($namn, $person['username']) == 0 && password_verify($lösenord, $person['password'])){
+        return $person['userID'];
+    }
+}
+return "";
+
 }
 
 function validateInput($name,$mail,$comment){
