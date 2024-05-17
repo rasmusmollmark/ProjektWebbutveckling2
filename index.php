@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <?php session_start(); 
-    if(!isset($_SESSION['uu'])){
+    if(!isset($_SESSION['USERID'])){
     header("Location: ./login.php");
     exit();
     }?>
@@ -11,7 +11,7 @@
     <title>Document</title>
 </head>
 <body>
-<?php if(isset($_SESSION['uu'])):?>
+<?php if(isset($_SESSION['USERID'])):?>
         <div class="center-flex" id="container">
 	<?php 
 
@@ -20,9 +20,12 @@
     <a href="./displaycomments.php">
         <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
     </a>
+    <a href="./logOut.php">
+        <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Logga ut</button>
+    </a>
     </div>
         <?php endif?>
-       <?php if(!isset($_SESSION['uu'])):?>
+       <?php if(!isset($_SESSION['USERID'])):?>
         
         <section>
     <h2>DU ÄR INTE INLOGGAD</h2>
