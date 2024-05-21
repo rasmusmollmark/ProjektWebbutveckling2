@@ -1,99 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <?php session_start(); 
-    if(!isset($_SESSION['uu'])){
-    header("Location: ./login.php");
-    exit();
+    <?php 
+    session_set_cookie_params(0);
+    session_start(); 
+    if(isset($_SESSION['USERID'])){
+        require __DIR__ . '/getDeck.php';
+        $_SESSION['DECKID'] = getDeckID();
+    }
+    else{
+        header("Location: ./logOut.php");
+        exit();
     }?>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="blackjack.css">
     <title>Hemsida</title>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-	<script>
-		function getDeck(){
-			$.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(data){
-				return callPHP(data);
-			});
+    <script>
+    let playerNoOfAce = 0;
+    let houseNoOfAce = 0;
+    let playerScore = 0;
+    let houseScore = 0;
+    let houseHiddenCard;
+
+    function shuffleDeck() {
+        let deck_id = '<?php echo $_SESSION['DECKID']?>';
+        $.get("https://deckofcardsapi.com/api/deck/" + deck_id + "/shuffle/?deck_count=6", function(data) {});
+    }
+
+    function valueEncoder(value) {
+        if (value === "JACK" || value === "QUEEN" || value === "KING") {
+            return 10;
+        } else if (value === "ACE") {
+            return (playerScore + 11 > 21) ? 1 : 11;
+        } else {
+            return Number(value);
         }
-		
-        function btn_click(){
-			$.get("https://deckofcardsapi.com/api/deck/new/draw/?count=1", function(data){
-				make_result(data);
-			});
-        }
-		function make_result(input){
+    }
 
-			let json = input.cards[0];
-			// $('#container').empty();
-			let img = "<img src=\"" + json.image + "\">";
-			let div = `
-				<div>
-					${img}<br>
-					Name: ${json.value} <br>
-					
-				</div>
-			`;
-			$('#container').append(div);
-			console.log(input);
-			console.log(input.data)
-		}
+    function createPlayerDiv(input) {
+        let cards = input.cards[0];
+        var cardval = valueEncoder(cards.value);
+        playerScore += cardval;
+        let img = "<img src=\"" + cards.image + "\">";
+        let div = `<div>${img}<br></div>`;
+        $('#bottom').append(div);
+        $('#score-bottom').children().last().remove();
+        let scoreDiv = `
+        <div>Score: ${playerScore}</div>
+        `;
+        $('#score-bottom').append(scoreDiv);
+    }
 
-		function callPHP(deckID) {
-    // Construct the URL with parameters
-    var url = "handleDeck.php?deckID="+deckid;
+    function createHouseDiv(input) {
+        let cards = input.cards[0];
+        var cardval = valueEncoder(cards.value);
+        houseScore += cardval;
+        let img = "<img src=\"" + cards.image + "\">";
+        let div = `<div>${img}<br></div>`;
+        $('#top').append(div);
+        $('#score-top').children().last().remove();
+        let scoreDiv = `
+        <div>Score: ${houseScore}</div>
+        `;
+        $('#score-top').append(scoreDiv);
+    }
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error("Error:", data.error);
-            } else if (data) {
-                console.log("Deck ID:", data.deckID);
-                return data.deckID;
+    window.onload = function() {
+        playerScore = 0;
+        houseScore = 0;
+        let img = "<img src=\"" + "https://deckofcardsapi.com/static/img/back.png" + "\">";
+        let div = `<div>${img}<br></div>`;
+        $('#top').append(div);
+        $('#top').append(div);
+        $('#bottom').append(div);
+        $('#bottom').append(div);
+        $('#score-top').hide();
+        $('#score-bottom').hide();
+    };
+
+    function addHidden(input) {
+        houseHiddenCard = input;
+        let img = "<img src=\"" + "https://deckofcardsapi.com/static/img/back.png" + "\">";
+        let div = `<div>${img}<br></div>`;
+        $('#top').append(div);
+    }
+
+    function blackjack() {
+        shuffleDeck();
+        $('#top').children().remove();
+        $('#bottom').children().remove();
+        playerScore = 0;
+        houseScore = 0;
+        drawCard().then(data => createPlayerDiv(data));
+        drawCard().then(data => createPlayerDiv(data));
+        drawCard().then(data => createHouseDiv(data));
+        drawCard().then(data => addHidden(data));
+        $('#blackjack_button').remove(); 
+        $('#hit-button').show();
+        $('#double-button').show();
+        $('#stay-button').show();
+        $('#score-top').show();
+        $('#score-bottom').show();
+    }
+
+    function drawCard() {
+        let deck_id = '<?php echo $_SESSION['DECKID']?>';
+        return $.get("https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=1");
+    }
+
+    function housePlay() {
+        createHouseDiv(houseHiddenCard);
+        checkHouseScore();
+    }
+
+    function stay() {
+        $('#top').children().last().remove();
+        housePlay();
+    }
+
+    function playerWin() {
+        notifyResult("PLAYER WON");
+        gameOver();
+    }
+
+    function notifyResult(result){
+        let para = `
+        <div>${result}</div>
+        `;
+        $('#result').append(para);
+    }
+
+    function push() {
+        notifyResult("PUSH");
+        gameOver();
+    }
+
+    function checkHouseScore() {
+        if (houseScore < 17) {
+            drawCard().then(data => {
+                createHouseDiv(data);
+                checkHouseScore();
+            });
+        } else if (houseScore >= 17 && houseScore < 22) {
+            if (houseScore > playerScore) {
+                houseWin();
+            } else if (houseScore < playerScore) {
+                playerWin();
             } else {
-                console.log("No deckID found.");
+                push();
             }
-        })
-        .catch(error => {
-            console.error("Fetch error:", error);
+        } else {
+            playerWin();
+        }
+    }
+
+    function houseWin() {
+        notifyResult("HOUSE WON");
+        gameOver();
+    }
+
+    function checkPlayerScore() {
+        if (playerScore > 21) {
+            notifyResult("BUST");
+            gameOver();
+        }
+    }
+
+    function playerHit(playerDoubled) {
+        drawCard().then(data => {
+            createPlayerDiv(data);
+            checkPlayerScore();
         });
-}
-	</script>
+    }
+
+    function resetPage() {
+        playerScore = 0;
+        houseScore = 0;
+        $('#top').children().remove();
+        $('#bottom').children().remove();
+        $('#score-top').children().remove();
+        $('#score-bottom').children().remove();
+        let img = "<img src=\"" + "https://deckofcardsapi.com/static/img/back.png" + "\">";
+        let div = `<div>${img}<br>${houseScore}<br></div>`;
+        $('#top').append(div);
+        $('#top').append(div);
+        $('#bottom').append(div);
+        $('#bottom').append(div);
+        
+    }
+
+    function playAgain(){
+        $('#button-container').children().last().remove();
+        let blackjackButton = '<button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>';
+        $('#button-container').append(blackjackButton);
+        $('#result').children().last().remove();
+        resetPage();
+    }
+
+    function gameOver() {
+        
+        $('#hit-button').hide();
+        $('#double-button').hide();
+        $('#stay-button').hide();
+        let playAgainButton = '<button id="playagain_button" onclick="playAgain()">Spela igen</button>';
+        $('#button-container').append(playAgainButton);
+       
+    }
+</script>
+
 </head>
 <body>
-
-<?php if(isset($_SESSION['uu'])):?>
+    <?php if(isset($_SESSION['USERID'])): ?>
         <div class="center-flex" id="container">
-	<?php 
-
-    ?>
-	<button id="click_me" onclick="btn_click()">Click me!</button>
-    <a href="./displaycomments.php">
-        <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
-    </a>
-    </div>
-        <?php endif?>
-       <?php if(!isset($_SESSION['uu'])):?>
-        
+            <a href="./displaycomments.php">
+                <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
+            </a>
+            <div id="top">
+                
+            </div>
+            <div id="bottom">
+                
+                
+            </div>
+            <div id="result"></div>
+            <div id="score-top"></div>
+            <div id="score-bottom"></div>
+            <div id="button-container">
+                <button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>
+                <button id="hit-button" onclick="playerHit(false)" style="display: none;">Hit</button>
+                <button id="double-button" onclick="playerHit(true)" style="display: none;">Double</button>
+                <button id="stay-button" onclick="stay()" style="display: none;">Stay</button>
+            </div>
+        </div>
+    <?php else: ?>
         <section>
-    <h2>DU ÄR INTE INLOGGAD</h2>
-    <button>Gå tillbaka</button>
-   </section>
-        <?php endif?>
-
-   
-
-<!--
-<div class="center-flex" id="container">
-	
-	<button id="click_me" onclick="btn_click()">Click me!</button>
-    <a href="./displaycomments.php">
-        <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
-    </a>
-    </div>
--->
+            <h2>DU ÄR INTE INLOGGAD</h2>
+            <button>Gå tillbaka</button>
+        </section>
+    <?php endif ?>
 </body>
 </html>

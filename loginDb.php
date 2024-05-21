@@ -4,6 +4,7 @@ $lösenord = $_POST['password'];
 
 
 if(loginCorrect($namn,$lösenord) && !empty($namn)){
+    session_set_cookie_params(0);
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
     header("Location: ./index.php");

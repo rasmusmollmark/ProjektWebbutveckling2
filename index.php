@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php session_start(); 
+<?php 
+    session_set_cookie_params(0);
+    session_start(); 
     if(!isset($_SESSION['USERID'])){
-    header("Location: ./login.php");
+    header("Location: ./logOut.php");
     exit();
     }?>
     <meta charset="UTF-8">
@@ -13,15 +15,15 @@
 <body>
 <?php if(isset($_SESSION['USERID'])):?>
         <div class="center-flex" id="container">
-	<?php 
-
-    ?>
 	<button id="click_me" onclick="btn_click()">Click me!</button>
     <a href="./displaycomments.php">
         <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
     </a>
     <a href="./logOut.php">
         <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Logga ut</button>
+    </a>
+    <a href="./casino.php">
+        <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Casino</button>
     </a>
     </div>
         <?php endif?>
