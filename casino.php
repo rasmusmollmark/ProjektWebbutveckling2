@@ -233,12 +233,15 @@
         $('#stay-button').hide();
         let playAgainButton = '<button id="playagain_button" onclick="playAgain()">Spela igen</button>';
         $('#button-container').append(playAgainButton);
+        playerBet = 0;
        
     }
     function placeBet(bet){
         if(playerCurrency-bet >= 0){
             playerBet += bet;
             playerCurrency -= bet;
+            updateVisualCurrency();
+            updateCurrency(playerCurrency);
         }
         else{
             alert("Not enough money");
