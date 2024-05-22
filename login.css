@@ -12,10 +12,12 @@
 }
 
 .loginInput form {
-  display: inline-block;
+  display: block;
+  margin: 0 auto;
+  width: 25%;
   text-align: left;
   background-color: #800020; /* Same background color as the header */
-  padding: 54px;
+  padding: 40px;
   border-radius: 10px;
   color: white; /* Text color to contrast with the background */
 }
@@ -47,6 +49,11 @@
   background-color: #3304aa; /* Button background color */
   color: white; /* Button text color */
   cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+
+.loginInput input[type="submit"]:hover {
+  background-color: #5504cc; /* Change to a different color on hover */
 }
 
 .topnav {
@@ -56,13 +63,12 @@
 }
 
 .topnav a {
-  /*color: #f2f2f2; syntes inte*/ 
-  color: black;
-  font-weight: bold;
+  color: black; /* Ensure the text color is black */
   text-align: center;
   padding: 10px 12px;
   text-decoration: none;
   font-size: 20px;
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
 }
 
 .topnav a:hover {

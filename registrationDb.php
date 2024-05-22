@@ -15,9 +15,9 @@ $stmt -> bindParam (':currency', $currency, SQLITE3_TEXT);
 
 
 if ($stmt -> execute()) {
+    $db -> close ();
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
-    $db -> close () ;
     header("Location: ./index.php");
     exit();
     return true;
@@ -31,9 +31,9 @@ else {
 
 function getUserID($namn,$lösenord){
     $db = new SQLite3 ("./db/database.db");
-$result = $db -> query('SELECT userID, username, password FROM User');
+$result = $db -> query('SELECT userID, username FROM User');
 while($person = $result -> fetchArray()){
-    if(strcmp($namn, $person['username']) == 0 && password_verify($lösenord, $person['password'])){
+    if(strcmp($namn, $person['username']) == 0){
         return $person['userID'];
     }
 }
