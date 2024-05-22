@@ -168,6 +168,9 @@
             notifyResult("BUST");
             gameOver();
         }
+        else if(playerScore == 21){
+            stay();
+        }
     }
 
     function playerHit(playerDoubled) {
