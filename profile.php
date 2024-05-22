@@ -12,14 +12,14 @@
         <h2>Qandale <br> Casino</h2>
        
         <div class="button-container">
-            <button><a href="link1">Startsida</a></button>
-            <button><a href="link2">Spela</a></button>
+            <button><a href="index.php">Startsida</a></button>
+            <button><a href="casino.php">Spela</a></button>
             <button><a href="link3">Om oss</a></button>
         </div>
     </aside>
 
     <article id="profileBox">
-            <img src="Johan-Rheborg-Konferencier-Komiker-e1532974080723.jpg" alt="Profile picture">
+            <img src="background.jpg" alt="Profile picture">
             <ul> 
                 <li>
                     <h3> Name: (Name) </h3>
