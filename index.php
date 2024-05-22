@@ -20,7 +20,10 @@
                 <p>Welcome to <br> Quandale Casino</p>
                 <div id="profile-button-div">
                 <a href="./profile.php">
-                    <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Profil</button>
+                    <button >Profil</button>
+                </a>
+                <a href="./logOut.php">
+                    <button>Logga ut</button>
                 </a>
                 </div>
             </div>

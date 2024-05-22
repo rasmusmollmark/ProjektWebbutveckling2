@@ -20,8 +20,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
-    let playerNoOfAce = 0;
-    let houseNoOfAce = 0;
+    let playerCurrency = Number('<?php echo $_SESSION['CURRENCY'] ?>');
+    let playerBet = 0;
     let playerScore = 0;
     let houseScore = 0;
     let houseHiddenCard;
@@ -69,6 +69,13 @@
         $('#score-top').append(scoreDiv);
     }
 
+    function updateVisualCurrency(){
+        let currencyDiv = `<p>Money: ${playerCurrency}</p>
+        `;
+        $('#money').children().last().remove();
+        $('#money').append(currencyDiv);
+    }
+
     window.onload = function() {
         playerScore = 0;
         houseScore = 0;
@@ -78,8 +85,11 @@
         $('#top').append(div);
         $('#bottom').append(div);
         $('#bottom').append(div);
+        $('#money').show();
         $('#score-top').hide();
         $('#score-bottom').hide();
+        updateVisualCurrency();
+       
     };
 
     function addHidden(input) {
@@ -124,7 +134,7 @@
 
     function playerWin() {
         notifyResult("PLAYER WON");
-        gameOver();
+        gameOver(true);
     }
 
     function notifyResult(result){
@@ -193,6 +203,7 @@
         $('#top').append(div);
         $('#bottom').append(div);
         $('#bottom').append(div);
+        playerBet = 0;
         
     }
 
@@ -204,8 +215,19 @@
         resetPage();
     }
 
-    function gameOver() {
-        
+    function getPlayerWinnings(playerWon){
+        if(playerWon){
+            return playerCurrency += playerBet*2;
+        }
+        else{
+            return playerCurrency;
+        }
+    }
+
+    function gameOver(playerWon) {
+        winnings = getPlayerWinnings(playerWon);
+        updateCurrency(winnings);
+        updateVisualCurrency();
         $('#hit-button').hide();
         $('#double-button').hide();
         $('#stay-button').hide();
@@ -213,6 +235,31 @@
         $('#button-container').append(playAgainButton);
        
     }
+    function placeBet(bet){
+        if(playerCurrency-bet >= 0){
+            playerBet += bet;
+            playerCurrency -= bet;
+        }
+        else{
+            alert("Not enough money");
+        }
+    }
+
+    function updateCurrency(newCurrency) {
+    $.ajax({
+        url: 'updateCurrency.php',
+        type: 'POST',
+        data: { currency: newCurrency },
+        success: function(response) {
+            console.log(response);
+            playerCurrency = Number('<?php echo $_SESSION['CURRENCY']?>');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Error updating currency: ', textStatus, errorThrown);
+        }
+    });
+
+}
 </script>
 
 </head>
@@ -229,9 +276,21 @@
                 
                 
             </div>
+            
             <div id="result"></div>
             <div id="score-top"></div>
             <div id="score-bottom"></div>
+            <div id="betting">
+                <p id="p-bet">Bet</p>
+                <div id="bet-button-container">
+                <button id="bet-10" onclick="placeBet(10)" style="font-size:10;background-color:red;color:white;">10</button>
+                <button id="bet-10" onclick="placeBet(50)" style="font-size:10;background-color:red;color:white;">50</button>
+                <button id="bet-10" onclick="placeBet(100)" style="font-size:10;background-color:red;color:white;">100</button>
+                </div>
+                
+            <div id="money"></div>
+            </div>
+            
             <div id="button-container">
                 <button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>
                 <button id="hit-button" onclick="playerHit(false)" style="display: none;">Hit</button>

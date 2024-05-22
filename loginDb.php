@@ -7,6 +7,7 @@ if(loginCorrect($namn,$lösenord) && !empty($namn)){
     session_set_cookie_params(0);
     session_start();
     $_SESSION['USERID'] = getUserID($namn,$lösenord);
+    $_SESSION['CURRENCY'] = getUserCurrency();
     header("Location: ./index.php");
     exit();
 }
@@ -35,5 +36,16 @@ while($person = $result -> fetchArray()){
 }
 return "";
 
+}
+
+function getUserCurrency(){
+    $db = new SQLite3 ("./db/database.db");
+$result = $db -> query('SELECT currency, userID FROM User');
+while($person = $result -> fetchArray()){
+    if(strcmp($person['userID'], $_SESSION['USERID']) == 0){
+        return $person['currency'];
+    }
+}
+return 0;
 }
 ?> 
