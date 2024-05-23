@@ -20,10 +20,20 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
     let playerCurrency = Number('<?php echo $_SESSION['CURRENCY'] ?>');
+    console.log(playerCurrency);
     let playerBet = 0;
     let playerScore = 0;
     let houseScore = 0;
     let houseHiddenCard;
+    let playerHasBet = false;
+
+    function getPlayerCurrency(){
+        return playerCurrency;
+    }
+
+    function changePlayerCurrency(change){
+        playerCurrency += change;
+    }
 
     function shuffleDeck() {
         let deck_id = '<?php echo $_SESSION['DECKID']?>';
@@ -69,7 +79,7 @@
     }
 
     function updateVisualCurrency(){
-        let currencyDiv = `<p>Money: ${playerCurrency}</p>
+        let currencyDiv = `<p>Money: ${getPlayerCurrency()}</p>
         `;
         $('#money').children().last().remove();
         $('#money').append(currencyDiv);
@@ -99,6 +109,8 @@
     }
 
     function blackjack() {
+        if(playerHasBet){
+            console.log(getPlayerCurrency());
         shuffleDeck();
         $('#top').children().remove();
         $('#bottom').children().remove();
@@ -109,11 +121,13 @@
         drawCard().then(data => createHouseDiv(data));
         drawCard().then(data => addHidden(data));
         $('#blackjack_button').remove(); 
+        $('#bet-button-container').hide();
         $('#hit-button').show();
         $('#double-button').show();
         $('#stay-button').show();
         $('#score-top').show();
         $('#score-bottom').show();
+        }
     }
 
     function drawCard() {
@@ -145,7 +159,7 @@
 
     function push() {
         notifyResult("PUSH");
-        gameOver();
+        gameOver(false);
     }
 
     function checkHouseScore() {
@@ -169,13 +183,13 @@
 
     function houseWin() {
         notifyResult("HOUSE WON");
-        gameOver();
+        gameOver(false);
     }
 
     function checkPlayerScore() {
         if (playerScore > 21) {
             notifyResult("BUST");
-            gameOver();
+            gameOver(false);
         }
         else if(playerScore == 21){
             stay();
@@ -202,6 +216,7 @@
         $('#top').append(div);
         $('#bottom').append(div);
         $('#bottom').append(div);
+        $('#bet-button-container').show();
         playerBet = 0;
         
     }
@@ -215,17 +230,21 @@
     }
 
     function getPlayerWinnings(playerWon){
+        console.log(getPlayerCurrency());
+            console.log(playerBet*2);
         if(playerWon){
-            return playerCurrency += playerBet*2;
+            return getPlayerCurrency() + playerBet*2;
         }
         else{
-            return playerCurrency;
+            return getPlayerCurrency();
         }
     }
 
     function gameOver(playerWon) {
-        winnings = getPlayerWinnings(playerWon);
+        console.log(playerWon);
+        winnings = getPlayerWinnings(playerWon)        
         updateCurrency(winnings);
+        console.log(winnings);
         updateVisualCurrency();
         $('#hit-button').hide();
         $('#double-button').hide();
@@ -236,11 +255,14 @@
        
     }
     function placeBet(bet){
-        if(playerCurrency-bet >= 0){
+        if(getPlayerCurrency()-bet >= 0){
             playerBet += bet;
-            playerCurrency -= bet;
+            
+            changePlayerCurrency(-bet);
+            console.log(getPlayerCurrency());
+            playerHasBet = true;
             updateVisualCurrency();
-            updateCurrency(playerCurrency);
+            updateCurrency(getPlayerCurrency());
         }
         else{
             alert("Not enough money");
@@ -254,7 +276,7 @@
         data: { currency: newCurrency },
         success: function(response) {
             console.log(response);
-            playerCurrency = Number('<?php echo $_SESSION['CURRENCY']?>');
+            changePlayerCurrency(Number('<?php echo $_SESSION['CURRENCY']?>'));
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error updating currency: ', textStatus, errorThrown);
