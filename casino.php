@@ -3,14 +3,11 @@
 <head>
     <?php 
     session_start(); 
-    if(isset($_SESSION['USERID'])){
-        require __DIR__ . '/getDeck.php';
-        $_SESSION['DECKID'] = getDeckID();
-    }
-    else{
+    if(!isset($_SESSION['USERID'])){
         header("Location: ./logOut.php");
         exit();
-    }?>
+    }
+    ?>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,24 +17,23 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
     let playerCurrency = Number('<?php echo $_SESSION['CURRENCY'] ?>');
-    console.log(playerCurrency);
     let playerBet = 0;
     let playerScore = 0;
     let houseScore = 0;
     let houseHiddenCard;
     let playerHasBet = false;
 
-    function getPlayerCurrency(){
+    function getPlayerCurrency() {
         return playerCurrency;
     }
 
-    function changePlayerCurrency(change){
+    function changePlayerCurrency(change) {
         playerCurrency += change;
+        console.log("Updated Player Currency: ", playerCurrency);
     }
 
     function shuffleDeck() {
-        let deck_id = '<?php echo $_SESSION['DECKID']?>';
-        $.get("https://deckofcardsapi.com/api/deck/" + deck_id + "/shuffle/?deck_count=6", function(data) {});
+        $.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6", function(data) {});
     }
 
     function valueEncoder(value) {
@@ -52,53 +48,38 @@
 
     function createPlayerDiv(input) {
         let cards = input.cards[0];
-        var cardval = valueEncoder(cards.value);
+        let cardval = valueEncoder(cards.value);
         playerScore += cardval;
         let img = "<img src=\"" + cards.image + "\">";
         let div = `<div>${img}<br></div>`;
         $('#bottom').append(div);
-        $('#score-bottom').children().last().remove();
-        let scoreDiv = `
-        <div>Score: ${playerScore}</div>
-        `;
-        $('#score-bottom').append(scoreDiv);
+        updatePlayerScore();
     }
 
     function createHouseDiv(input) {
         let cards = input.cards[0];
-        var cardval = valueEncoder(cards.value);
+        let cardval = valueEncoder(cards.value);
         houseScore += cardval;
         let img = "<img src=\"" + cards.image + "\">";
         let div = `<div>${img}<br></div>`;
         $('#top').append(div);
-        $('#score-top').children().last().remove();
-        let scoreDiv = `
-        <div>Score: ${houseScore}</div>
-        `;
-        $('#score-top').append(scoreDiv);
+        updateHouseScore();
     }
 
-    function updateVisualCurrency(){
-        let currencyDiv = `<p>Money: ${getPlayerCurrency()}</p>
-        `;
-        $('#money').children().last().remove();
-        $('#money').append(currencyDiv);
+    function updateVisualCurrency() {
+        $('#money').html(`<p>Money: ${getPlayerCurrency()}</p><p>Bet: ${playerBet}</p>`);
+    }
+
+    function updatePlayerScore() {
+        $('#score-bottom').html(`<div>Score: ${playerScore}</div>`);
+    }
+
+    function updateHouseScore() {
+        $('#score-top').html(`<div>Score: ${houseScore}</div>`);
     }
 
     window.onload = function() {
-        playerScore = 0;
-        houseScore = 0;
-        let img = "<img src=\"" + "https://deckofcardsapi.com/static/img/back.png" + "\">";
-        let div = `<div>${img}<br></div>`;
-        $('#top').append(div);
-        $('#top').append(div);
-        $('#bottom').append(div);
-        $('#bottom').append(div);
-        $('#money').show();
-        $('#score-top').hide();
-        $('#score-bottom').hide();
-        updateVisualCurrency();
-       
+        resetGame();
     };
 
     function addHidden(input) {
@@ -109,30 +90,23 @@
     }
 
     function blackjack() {
-        if(playerHasBet){
-            console.log(getPlayerCurrency());
-        shuffleDeck();
-        $('#top').children().remove();
-        $('#bottom').children().remove();
-        playerScore = 0;
-        houseScore = 0;
-        drawCard().then(data => createPlayerDiv(data));
-        drawCard().then(data => createPlayerDiv(data));
-        drawCard().then(data => createHouseDiv(data));
-        drawCard().then(data => addHidden(data));
-        $('#blackjack_button').remove(); 
-        $('#bet-button-container').hide();
-        $('#hit-button').show();
-        $('#double-button').show();
-        $('#stay-button').show();
-        $('#score-top').show();
-        $('#score-bottom').show();
+        if (playerHasBet) {
+            shuffleDeck();
+            resetCards();
+            playerScore = 0;
+            houseScore = 0;
+            drawCard().then(data => createPlayerDiv(data));
+            drawCard().then(data => createPlayerDiv(data));
+            drawCard().then(data => createHouseDiv(data));
+            drawCard().then(data => addHidden(data));
+            toggleGameButtons(true);
+            updatePlayerScore();
+            updateHouseScore();
         }
     }
 
     function drawCard() {
-        let deck_id = '<?php echo $_SESSION['DECKID']?>';
-        return $.get("https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=1");
+        return $.get("https://deckofcardsapi.com/api/deck/new/draw/?count=1");
     }
 
     function housePlay() {
@@ -147,19 +121,16 @@
 
     function playerWin() {
         notifyResult("PLAYER WON");
-        gameOver(true);
+        gameOver(true, false);
     }
 
-    function notifyResult(result){
-        let para = `
-        <div>${result}</div>
-        `;
-        $('#result').append(para);
+    function notifyResult(result) {
+        $('#result').append(`<div>${result}</div>`);
     }
 
     function push() {
         notifyResult("PUSH");
-        gameOver(false);
+        gameOver(false, true);
     }
 
     function checkHouseScore() {
@@ -183,15 +154,18 @@
 
     function houseWin() {
         notifyResult("HOUSE WON");
-        gameOver(false);
+        gameOver(false, false);
     }
 
-    function checkPlayerScore() {
+    function checkPlayerScore(playerDoubled) {
+        if (playerDoubled) {
+            placeBet(playerBet);
+            
+        }
         if (playerScore > 21) {
             notifyResult("BUST");
-            gameOver(false);
-        }
-        else if(playerScore == 21){
+            gameOver(false, false);
+        } else if (playerScore === 21) {
             stay();
         }
     }
@@ -199,93 +173,101 @@
     function playerHit(playerDoubled) {
         drawCard().then(data => {
             createPlayerDiv(data);
-            checkPlayerScore();
+            checkPlayerScore(playerDoubled);
         });
     }
 
-    function resetPage() {
+    function resetCards() {
         playerScore = 0;
         houseScore = 0;
         $('#top').children().remove();
         $('#bottom').children().remove();
-        $('#score-top').children().remove();
-        $('#score-bottom').children().remove();
-        let img = "<img src=\"" + "https://deckofcardsapi.com/static/img/back.png" + "\">";
-        let div = `<div>${img}<br>${houseScore}<br></div>`;
-        $('#top').append(div);
-        $('#top').append(div);
-        $('#bottom').append(div);
-        $('#bottom').append(div);
-        $('#bet-button-container').show();
-        playerBet = 0;
-        
     }
 
-    function playAgain(){
-        $('#button-container').children().last().remove();
-        let blackjackButton = '<button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>';
-        $('#button-container').append(blackjackButton);
-        $('#result').children().last().remove();
-        resetPage();
-    }
-
-    function getPlayerWinnings(playerWon){
-        console.log(getPlayerCurrency());
-            console.log(playerBet*2);
-        if(playerWon){
-            return getPlayerCurrency() + playerBet*2;
-        }
-        else{
-            return getPlayerCurrency();
-        }
-    }
-
-    function gameOver(playerWon) {
-        console.log(playerWon);
-        winnings = getPlayerWinnings(playerWon)        
-        updateCurrency(winnings);
-        console.log(winnings);
+    function resetGame() {
+        resetCards();
         updateVisualCurrency();
-        $('#hit-button').hide();
-        $('#double-button').hide();
-        $('#stay-button').hide();
-        let playAgainButton = '<button id="playagain_button" onclick="playAgain()">Spela igen</button>';
-        $('#button-container').append(playAgainButton);
-        playerBet = 0;
-       
+        $('#top').append(`<div><img src="https://deckofcardsapi.com/static/img/back.png"><br></div>`);
+        $('#bottom').append(`<div><img src="https://deckofcardsapi.com/static/img/back.png"><br></div>`);
+        $('#top').append(`<div><img src="https://deckofcardsapi.com/static/img/back.png"><br></div>`);
+        $('#bottom').append(`<div><img src="https://deckofcardsapi.com/static/img/back.png"><br></div>`);
+        $('#score-top').hide();
+        $('#score-bottom').hide();
+        toggleGameButtons(false);
     }
-    function placeBet(bet){
-        if(getPlayerCurrency()-bet >= 0){
+
+    function playAgain() {
+        $('#button-container').children().last().remove();
+        $('#result').children().last().remove();
+        $('#button-container').append('<button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>');
+        resetGame();
+    }
+
+    function getPlayerWinnings(playerWon, push) {
+        if (playerWon) {
+            return getPlayerCurrency() + playerBet * 2;
+        } else if (push) {
+            return getPlayerCurrency() + playerBet;
+        }
+        return getPlayerCurrency();
+    }
+
+    function gameOver(playerWon, push) {
+        let winnings = getPlayerWinnings(playerWon, push);
+        updateCurrency(winnings);
+        updateVisualCurrency();
+        toggleGameButtons(false);
+        $('#button-container').append('<button id="playagain_button" onclick="playAgain()">Spela igen</button>');
+        playerBet = 0;
+        playerHasBet = false;
+    }
+
+    function placeBet(bet) {
+        if (getPlayerCurrency() - bet >= 0) {
             playerBet += bet;
-            
             changePlayerCurrency(-bet);
-            console.log(getPlayerCurrency());
             playerHasBet = true;
             updateVisualCurrency();
             updateCurrency(getPlayerCurrency());
-        }
-        else{
+        } else {
             alert("Not enough money");
         }
     }
 
     function updateCurrency(newCurrency) {
-    $.ajax({
-        url: 'updateCurrency.php',
-        type: 'POST',
-        data: { currency: newCurrency },
-        success: function(response) {
-            console.log(response);
-            changePlayerCurrency(Number('<?php echo $_SESSION['CURRENCY']?>'));
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error('Error updating currency: ', textStatus, errorThrown);
+        $.ajax({
+            url: 'updateCurrency.php',
+            type: 'POST',
+            data: { currency: newCurrency },
+            success: function(response) {
+                console.log("Currency updated:", response);
+                playerCurrency = newCurrency;
+                updateVisualCurrency();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error updating currency: ', textStatus, errorThrown);
+            }
+        });
+    }
+
+    function toggleGameButtons(inGame) {
+        if (inGame) {
+            $('#blackjack_button').remove();
+            $('#bet-button-container').hide();
+            $('#hit-button').show();
+            $('#double-button').show();
+            $('#stay-button').show();
+            $('#score-top').show();
+            $('#score-bottom').show();
+        } else {
+            $('#blackjack_button').show();
+            $('#bet-button-container').show();
+            $('#hit-button').hide();
+            $('#double-button').hide();
+            $('#stay-button').hide();
         }
-    });
-
-}
-</script>
-
+    }
+    </script>
 </head>
 <body>
     <?php if(isset($_SESSION['USERID'])): ?>
@@ -293,28 +275,20 @@
             <a href="./displaycomments.php">
                 <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Kommentarer</button>
             </a>
-            <div id="top">
-                
-            </div>
-            <div id="bottom">
-                
-                
-            </div>
-            
+            <div id="top"></div>
+            <div id="bottom"></div>
             <div id="result"></div>
             <div id="score-top"></div>
             <div id="score-bottom"></div>
             <div id="betting">
-                <p id="p-bet">Bet</p>
-                <div id="bet-button-container">
-                <button id="bet-10" onclick="placeBet(10)" style="font-size:10;background-color:red;color:white;">10</button>
-                <button id="bet-10" onclick="placeBet(50)" style="font-size:10;background-color:red;color:white;">50</button>
-                <button id="bet-10" onclick="placeBet(100)" style="font-size:10;background-color:red;color:white;">100</button>
-                </div>
                 
-            <div id="money"></div>
+                <div id="bet-button-container">
+                    <button id="bet-10" onclick="placeBet(10)" style="font-size:10;background-color:red;color:white;">10</button>
+                    <button id="bet-50" onclick="placeBet(50)" style="font-size:10;background-color:red;color:white;">50</button>
+                    <button id="bet-100" onclick="placeBet(100)" style="font-size:10;background-color:red;color:white;">100</button>
+                </div>
+                <div id="money"></div>
             </div>
-            
             <div id="button-container">
                 <button id="blackjack_button" onclick="blackjack()">Spela blackjack</button>
                 <button id="hit-button" onclick="playerHit(false)" style="display: none;">Hit</button>
