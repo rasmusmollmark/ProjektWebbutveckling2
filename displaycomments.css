@@ -1,0 +1,18 @@
+.header {
+    padding: 40px;
+    text-align: center;
+    background: #800020;
+    color: white;
+    border-radius: 10px;
+    font-size: 30px;
+}
+
+.commentbox {
+    display: inline-block;
+    text-align: center;
+    background-color: #8f8f8f; /* Same background color as the header */
+    padding: 54px;
+    border-radius: 10px;
+    color: white; /* Text color to contrast with the background */
+}
+
