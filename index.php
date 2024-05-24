@@ -35,7 +35,7 @@
                 <a href="./logOut.php">
                     <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Logga ut</button>
                 </a>
-                <a href="./casino.php">
+                <a href="./weather.php">
                     <button style="font-size:25px;background-color: aquamarine; border-radius: 10px;">Casino</button>
                 </a>
             </div>
